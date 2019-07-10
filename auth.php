@@ -142,7 +142,8 @@ class PHP_API_AUTH {
 			header('Access-Control-Expose-Headers: X-XSRF-TOKEN');
 			foreach (explode(',',$allowOrigins) as $o) {
 				if (preg_match('/^'.str_replace('\*','.*',preg_quote(strtolower(trim($o)))).'$/',$origin)) { 
-					header('Access-Control-Allow-Origin: '.$origin);
+					# header('Access-Control-Allow-Origin: '.$origin);
+					header('Access-Control-Allow-Origin: *');
 					break;
 				}
 			}
