@@ -7581,10 +7581,65 @@ if (empty($_SESSION['user']) || !$auth->hasValidCsrfToken()) {
 
 
 $config = new Config([
-	'database' => 'admin_b2b',
+	'driver' => 'mysql',
+	'address' => 'localhost',
+	'port' => '3306',
 	'username' => 'admin_back_001',
 	'password' => 'H2P4uIqMT5',
+	'database' => 'admin_b2b',
+	'debug' => true,
+	
+	'openApiBase' => '{"info":{"title":"API-REST-MVLTDA","version":"2.0.0"}}',
+	'cacheType' => 'NoCache',
+	'controllers' => 'records,columns,cache,openapi,geojson',
+	// 'middlewares' => 'cors,jwtAuth,basicAuth,authorization,validation,ipAddress,sanitation,multiTenancy,pageLimits,joinLimits,customization',
+	/*'firewall.allowedIpAddresses' => [
+		'181.129.103.142',
+		'181.129.103.138',
+	],*/
 ]);
+/*
+'controllers' => 'records,columns,cache,openapi,geojson',
+'middlewares' => 'cors,jwtAuth,basicAuth,authorization,validation,ipAddress,sanitation,multiTenancy,pageLimits,joinLimits,customization',
+'jwtAuth.mode' => 'optional',
+'jwtAuth.time' => '1538207605',
+'jwtAuth.secret' => 'axpIrCGNGqxzx2R9dtXLIPUSqPo778uhb8CA0F4Hx',
+'basicAuth.mode' => 'optional',
+'basicAuth.passwordFile' => __DIR__ . DIRECTORY_SEPARATOR . '.htpasswd',
+'authorization.tableHandler' => function ($operation, $tableName) {
+	return !($tableName == 'invisibles' && !isset($_SESSION['claims']['name']) && empty($_SESSION['username']));
+},
+'authorization.columnHandler' => function ($operation, $tableName, $columnName) {
+	return !($columnName == 'invisible');
+},
+'authorization.recordHandler' => function ($operation, $tableName) {
+	return ($tableName == 'comments') ? 'filter=message,neq,invisible' : '';
+},
+'ipAddress.tables' => 'barcodes',
+'ipAddress.columns' => 'ip_address',
+'sanitation.handler' => function ($operation, $tableName, $column, $value) {
+	return is_string($value) ? strip_tags($value) : $value;
+},
+'validation.handler' => function ($operation, $tableName, $column, $value, $context) {
+	return ($column['name'] == 'post_id' && !is_numeric($value)) ? 'must be numeric' : true;
+},
+'multiTenancy.handler' => function ($operation, $tableName) {
+	return ($tableName == 'kunsthåndværk') ? ['user_id' => 1] : [];
+},
+'pageLimits.pages' => 5,
+'pageLimits.records' => 10,
+'joinLimits.depth' => 2,
+'joinLimits.tables' => 4,
+'joinLimits.records' => 10,
+'customization.beforeHandler' => function ($operation, $tableName, $request, $environment) {
+	$environment->start = 0.003;
+},
+'customization.afterHandler' => function ($operation, $tableName, $response, $environment) {
+	if ($tableName == 'kunsthåndværk' && $operation == 'increment') {
+		return $response->withHeader('X-Time-Taken', 0.006 - $environment->start);
+	}
+},*/
+
 $request = RequestFactory::fromGlobals();
 $api = new Api($config);
 $response = $api->handle($request);

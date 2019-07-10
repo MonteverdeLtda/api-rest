@@ -1,0 +1,23 @@
+<IfModule mod_rewrite.c>
+	RewriteEngine On
+	# BEGIN OPTION 1 - COMPLETE
+		#RewriteCond %{REQUEST_FILENAME} !-d
+		#RewriteCond %{REQUEST_FILENAME} !-f
+		#RewriteRule ^(.*)$ api.php/$1 [L,QSA]
+	# END OPTION 1
+
+	# BEGIN OPTION 2 - /records/*
+		#RewriteCond %{REQUEST_FILENAME} !-d
+		#RewriteCond %{REQUEST_FILENAME} !-f
+		#RewriteRule ^(.*)$ api.php/records/$1 [L,QSA]
+	# END OPTION 2
+
+	# BEGIN OPTION 3
+		RewriteBase /
+		RewriteRule ^api\.php$ - [L]
+		RewriteCond %{REQUEST_FILENAME} !-f
+		RewriteCond %{REQUEST_FILENAME} !-d
+		RewriteRule . /api.php [L]
+		RewriteRule ^(.*)$ /api.php [L]
+	# END OPTION 3
+</IfModule>

@@ -5,7 +5,7 @@ $display_error = array();
 $display_error[401] = new stdclass();
 $display_error[401]->code = 401;
 $display_error[401]->error = "Unauthorized";
-$display_error[401]->message = "Esta página no funciona, Si el problema persiste, ponte en contacto con el propietario del sitio web.";
+$display_error[401]->message = "No tienes acceso a esta página, Si el problema persiste, ponte en contacto con el propietario del sitio web.";
 
 
 function showError($num_e){
