@@ -7557,6 +7557,10 @@ class ResponseUtils
 require 'errors.php';
 require 'auth.php';
 
+#ini_set('display_errors', 1);
+#ini_set('display_startup_errors', 1);
+#error_reporting(E_ALL);
+
 // descomente las líneas a continuación para la autenticación basada en token + sesión (consulte "login_token.html" + "login_token.php"):
 /*
 $auth = new PHP_API_AUTH(array(
@@ -7592,11 +7596,14 @@ $config = new Config([
 	'openApiBase' => '{"info":{"title":"API-REST-MVLTDA","version":"2.0.0"}}',
 	'cacheType' => 'NoCache',
 	'controllers' => 'records,columns,cache,openapi,geojson',
-	// 'middlewares' => 'cors,jwtAuth,basicAuth,authorization,validation,ipAddress,sanitation,multiTenancy,pageLimits,joinLimits,customization',
-	/*'firewall.allowedIpAddresses' => [
-		'181.129.103.142',
-		'181.129.103.138',
-	],*/
+	'middlewares' => 'cors,ipAddress,pageLimits', // Default
+	// 'controllers' => 'records,geojson,openapi', // Default
+	// 'middlewares' => 'cors,validation,sanitation,multiTenancy,,joinLimits,customization',
+	
+	'ipAddress.tables' => 'barcodes',
+	'ipAddress.columns' => 'ip_address',
+	'pageLimits.pages' => 5,
+	'pageLimits.records' => 10,
 ]);
 /*
 'controllers' => 'records,columns,cache,openapi,geojson',
@@ -7616,7 +7623,6 @@ $config = new Config([
 	return ($tableName == 'comments') ? 'filter=message,neq,invisible' : '';
 },
 'ipAddress.tables' => 'barcodes',
-'ipAddress.columns' => 'ip_address',
 'sanitation.handler' => function ($operation, $tableName, $column, $value) {
 	return is_string($value) ? strip_tags($value) : $value;
 },
@@ -7626,8 +7632,6 @@ $config = new Config([
 'multiTenancy.handler' => function ($operation, $tableName) {
 	return ($tableName == 'kunsthåndværk') ? ['user_id' => 1] : [];
 },
-'pageLimits.pages' => 5,
-'pageLimits.records' => 10,
 'joinLimits.depth' => 2,
 'joinLimits.tables' => 4,
 'joinLimits.records' => 10,

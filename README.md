@@ -1,15 +1,11 @@
 # Monteverde LTDA - Servicios Ambientales y Forestales
 ---
 ## PHP-REST-API (v2)
-
 Script PHP 7 de un solo archivo que agrega una API REST a una base de datos InnoDB MySQL 5.6. PostgreSQL 9.1 y MS SQL Server 2012 son totalmente compatibles.
 
-NB: Esta es la implementación de referencia de [TreeQL](https://treeql.org) en PHP.
-
-NB: ¿Estás buscando v1? Está aquí: https://github.com/Feliphegomez/api-rest-php/tree/v1.0.0
+**NOTA**: Esta es la implementación de referencia de [TreeQL](https://treeql.org) en PHP.
 
 ## Requerimientos
-
   - PHP 7.0 o superior con controladores PDO para MySQL, PgSQL o SqlSrv habilitados
   - MySQL 5.6 / MariaDB 10.0 o superior para características espaciales en MySQL
   - PostGIS 2.0 o superior para características espaciales en PostgreSQL 9.1 o superior
@@ -25,12 +21,12 @@ Esta es una aplicación de un solo archivo! Cargue "`api.php`" en algún lugar y
 
 Para el desarrollo local, puede ejecutar el servidor web incorporado de PHP:
 
-    php -S localhost:8080/api/
+    php -S localhost:8080/apí.php
 
 Pruebe el script abriendo la siguiente URL:
 
-    http://localhost:8080/api/api.php/records/posts/1
-    http://localhost:8080/api/posts/1 (si se incluye el archivo .htaccess)
+    http://localhost:8080/api.php/records/posts/1
+    http://localhost:8080/posts/1 (si se incluye la opcion 2 del archivo .htaccess)
 
 No olvide modificar la configuración en la parte inferior del archivo.
 
@@ -59,18 +55,6 @@ Estas son todas las opciones de configuración y su valor predeterminado entre p
 "cachePath": ruta / dirección del caché (por defecto al directorio temporal del sistema)
 "cacheTime": número de segundos que la memoria caché es válida ( 10 )
 "debug": muestra los errores en el encabezado "X-Debug-Info" ( false )
-
-## Compilacion
-
-El código reside en el directorio "`src`". Puedes acceder a ella en la URL:
-
-    http://localhost:8080/api/src/records/posts/1
-
-Puede compilar todos los archivos en un solo archivo "`api.php`" usando:
-
-    php build.php
-
-NB: La secuencia de comandos agrega las clases en orden alfabético (directorios primero).
 
 ## Limitaciones
 
