@@ -1,5 +1,13 @@
 <?php
-#namespace Tqdev\PhpCrudApi;
+/**
+ *
+ * PHP-REST-API (v2) - Developed by FelipheGomez
+ * License: MIT
+ * https://github.com/MonteverdeLtda/api-rest
+ *
+ **/
+
+namespace FelipheGomez\PhpCrudApi;
 
 interface RequestFactoryInterface
 {
@@ -4937,7 +4945,9 @@ class BasicAuthMiddleware extends Middleware
     public function process(ServerRequestInterface $request, RequestHandlerInterface $next): ResponseInterface
     {
         if (session_status() == PHP_SESSION_NONE) {
-            session_start();
+            if (!headers_sent()) {
+                session_start();
+            }
         }
         $credentials = $this->getAuthorizationCredentials($request);
         if ($credentials) {
@@ -5021,8 +5031,7 @@ class CorsMiddleware extends Middleware
             if ($allowCredentials) {
                 $response = $response->withHeader('Access-Control-Allow-Credentials', $allowCredentials);
             }
-            # $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
-            $response = $response->withHeader('Access-Control-Allow-Origin', "*");
+            $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
         }
         return $response;
     }
@@ -5055,6 +5064,82 @@ class CustomizationMiddleware extends Middleware
             $response = $result ?: $response;
         }
         return $response;
+    }
+}
+
+class DbAuthMiddleware extends Middleware
+{
+    private $reflection;
+    private $db;
+    private $ordering;
+
+    public function __construct(Router $router, Responder $responder, array $properties, ReflectionService $reflection, GenericDB $db)
+    {
+        parent::__construct($router, $responder, $properties);
+        $this->reflection = $reflection;
+        $this->db = $db;
+        $this->ordering = new OrderingInfo();
+    }
+
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $next): ResponseInterface
+    {
+        if (session_status() == PHP_SESSION_NONE) {
+            if (!headers_sent()) {
+                session_start();
+            }
+        }
+        $path = RequestUtils::getPathSegment($request, 1);
+        $method = $request->getMethod();
+        if ($method == 'POST' && $path == 'login') {
+            $body = $request->getParsedBody();
+            $username = isset($body->username) ? $body->username : '';
+            $password = isset($body->password) ? $body->password : '';
+            $tableName = $this->getProperty('usersTable', 'users');
+            $table = $this->reflection->getTable($tableName);
+            $usernameColumnName = $this->getProperty('usernameColumn', 'username');
+            $usernameColumn = $table->getColumn($usernameColumnName);
+            $passwordColumnName = $this->getProperty('passwordColumn', 'password');
+            $passwordColumn = $table->getColumn($passwordColumnName);
+            $condition = new ColumnCondition($usernameColumn, 'eq', $username);
+            $returnedColumns = $this->getProperty('returnedColumns', '');
+            if (!$returnedColumns) {
+                $columnNames = $table->getColumnNames();
+            } else {
+                $columnNames = array_map('trim', explode(',', $returnedColumns));
+                $columnNames[] = $passwordColumnName;
+            }
+            $columnOrdering = $this->ordering->getDefaultColumnOrdering($table);
+            $users = $this->db->selectAll($table, $columnNames, $condition, $columnOrdering, 0, 1);
+            foreach ($users as $user) {
+                if (password_verify($password, $user[$passwordColumnName]) == 1) {
+                    if (!headers_sent()) {
+                        session_regenerate_id(true);
+                    }
+                    unset($user[$passwordColumnName]);
+                    $_SESSION['user'] = $user;
+                    return $this->responder->success($user);
+                }
+            }
+            return $this->responder->error(ErrorCode::AUTHENTICATION_FAILED, $username);
+        }
+        if ($method == 'POST' && $path == 'logout') {
+            if (isset($_SESSION['user'])) {
+                $user = $_SESSION['user'];
+                unset($_SESSION['user']);
+                if (session_status() != PHP_SESSION_NONE) {
+                    session_destroy();
+                }
+                return $this->responder->success($user);
+            }
+            return $this->responder->error(ErrorCode::AUTHENTICATION_REQUIRED, '');
+        }
+        if (!isset($_SESSION['user']) || !$_SESSION['user']) {
+            $authenticationMode = $this->getProperty('mode', 'required');
+            if ($authenticationMode == 'required') {
+                return $this->responder->error(ErrorCode::AUTHENTICATION_REQUIRED, '');
+            }
+        }
+        return $next->handle($request);
     }
 }
 
@@ -5319,7 +5404,9 @@ class JwtAuthMiddleware extends Middleware
     public function process(ServerRequestInterface $request, RequestHandlerInterface $next): ResponseInterface
     {
         if (session_status() == PHP_SESSION_NONE) {
-            session_start();
+            if (!headers_sent()) {
+                session_start();
+            }
         }
         $token = $this->getAuthorizationToken($request);
         if ($token) {
@@ -6358,26 +6445,26 @@ class ErrorCode
 
     private $values = [
         9999 => ["%s", ResponseFactory::INTERNAL_SERVER_ERROR],
-        1000 => ["Route '%s' not found", ResponseFactory::NOT_FOUND],
-        1001 => ["Table '%s' not found", ResponseFactory::NOT_FOUND],
-        1002 => ["Argument count mismatch in '%s'", ResponseFactory::UNPROCESSABLE_ENTITY],
-        1003 => ["Record '%s' not found", ResponseFactory::NOT_FOUND],
-        1004 => ["Origin '%s' is forbidden", ResponseFactory::FORBIDDEN],
+        1000 => ["No se encontró la ruta '%s'", ResponseFactory::NOT_FOUND],
+        1001 => ["No se encontró la tabla '%s'", ResponseFactory::NOT_FOUND],
+        1002 => ["Discrepancia en el recuento de argumentos en '%s'", ResponseFactory::UNPROCESSABLE_ENTITY],
+        1003 => ["No se encontró el registro '%s'", ResponseFactory::NOT_FOUND],
+        1004 => ["El origen '%s' está prohibido", ResponseFactory::FORBIDDEN],
         1005 => ["Column '%s' not found", ResponseFactory::NOT_FOUND],
-        1006 => ["Table '%s' already exists", ResponseFactory::CONFLICT],
-        1007 => ["Column '%s' already exists", ResponseFactory::CONFLICT],
-        1008 => ["Cannot read HTTP message", ResponseFactory::UNPROCESSABLE_ENTITY],
-        1009 => ["Duplicate key exception", ResponseFactory::CONFLICT],
-        1010 => ["Data integrity violation", ResponseFactory::CONFLICT],
+        1006 => ["La tabla '%s' ya existe", ResponseFactory::CONFLICT],
+        1007 => ["La columna '%s' ya existe", ResponseFactory::CONFLICT],
+        1008 => ["No se puede leer el mensaje HTTP", ResponseFactory::UNPROCESSABLE_ENTITY],
+        1009 => ["Excepción de clave duplicada", ResponseFactory::CONFLICT],
+        1010 => ["Violación de integridad de datos", ResponseFactory::CONFLICT],
         1011 => ["Authentication required", ResponseFactory::UNAUTHORIZED],
-        1012 => ["Authentication failed for '%s'", ResponseFactory::FORBIDDEN],
-        1013 => ["Input validation failed for '%s'", ResponseFactory::UNPROCESSABLE_ENTITY],
+        1012 => ["La autenticación falló para '%s'", ResponseFactory::FORBIDDEN],
+        1013 => ["La validación de entrada falló para '%s'", ResponseFactory::UNPROCESSABLE_ENTITY],
         1014 => ["Operation forbidden", ResponseFactory::FORBIDDEN],
-        1015 => ["Operation '%s' not supported", ResponseFactory::METHOD_NOT_ALLOWED],
-        1016 => ["Temporary or permanently blocked", ResponseFactory::FORBIDDEN],
-        1017 => ["Bad or missing XSRF token", ResponseFactory::FORBIDDEN],
-        1018 => ["Only AJAX requests allowed for '%s'", ResponseFactory::FORBIDDEN],
-        1019 => ["Pagination forbidden", ResponseFactory::FORBIDDEN],
+        1015 => ["La operación '%s' no es compatible", ResponseFactory::METHOD_NOT_ALLOWED],
+        1016 => ["Temporal o permanentemente bloqueado", ResponseFactory::FORBIDDEN],
+        1017 => ["Token XSRF malo o faltante", ResponseFactory::FORBIDDEN],
+        1018 => ["Solo se permiten solicitudes AJAX para '% s'", ResponseFactory::FORBIDDEN],
+        1019 => ["Paginación prohibida", ResponseFactory::FORBIDDEN],
     ];
 
     public function __construct(int $code)
@@ -6771,6 +6858,7 @@ class RecordService
 class RelationJoiner
 {
     private $reflection;
+    private $ordering;
     private $columns;
 
     public function __construct(ReflectionService $reflection, ColumnIncluder $columns)
@@ -6854,7 +6942,7 @@ class RelationJoiner
         foreach ($joins->getKeys() as $t2Name) {
 
             $t2 = $this->reflection->getTable($t2Name);
-            
+
             $belongsTo = count($t1->getFksTo($t2->getName())) > 0;
             $hasMany = count($t2->getFksTo($t1->getName())) > 0;
             if (!$belongsTo && !$hasMany) {
@@ -6872,11 +6960,11 @@ class RelationJoiner
             if ($belongsTo) {
                 $fkValues = $this->getFkEmptyValues($t1, $t2, $records);
                 $this->addFkRecords($t2, $fkValues, $params, $db, $newRecords);
-            } 
+            }
             if ($hasMany) {
                 $pkValues = $this->getPkEmptyValues($t1, $records);
                 $this->addPkRecords($t1, $t2, $pkValues, $params, $db, $newRecords);
-            } 
+            }
             if ($hasAndBelongsToMany) {
                 $habtmValues = $this->getHabtmEmptyValues($t1, $t2, $t3, $db, $records);
                 $this->addFkRecords($t2, $habtmValues->fkValues, $params, $db, $newRecords);
@@ -6887,11 +6975,11 @@ class RelationJoiner
             if ($fkValues != null) {
                 $this->fillFkValues($t2, $newRecords, $fkValues);
                 $this->setFkValues($t1, $t2, $records, $fkValues);
-            } 
+            }
             if ($pkValues != null) {
                 $this->fillPkValues($t1, $t2, $newRecords, $pkValues);
                 $this->setPkValues($t1, $t2, $records, $pkValues);
-            } 
+            }
             if ($habtmValues != null) {
                 $this->fillFkValues($t2, $newRecords, $habtmValues->fkValues);
                 $this->setHabtmValues($t1, $t2, $records, $habtmValues);
@@ -7085,6 +7173,9 @@ class Api implements RequestHandlerInterface
                     break;
                 case 'jwtAuth':
                     new JwtAuthMiddleware($router, $responder, $properties);
+                    break;
+                case 'dbAuth':
+                    new DbAuthMiddleware($router, $responder, $properties, $reflection, $db);
                     break;
                 case 'validation':
                     new ValidationMiddleware($router, $responder, $properties, $reflection);
@@ -7553,36 +7644,33 @@ class ResponseUtils
     }
 }
 
-// PHP-API-AUTH del proyecto 
-require 'errors.php';
-require 'auth.php';
+/*
+global $display_error;
+$display_error = array();
+// Error 401: No autorizado
+$display_error[401] = new stdclass();
+$display_error[401]->code = 401;
+$display_error[401]->error = "Unauthorized";
+$display_error[401]->message = "No tienes acceso a esta página, Si el problema persiste, ponte en contacto con el propietario del sitio web.";
+
+function showError($num_e){
+	global $display_error;
+	$error = $display_error[$num_e];
+	$error->server = $_SERVER;
+	$error->reuqest = $_REQUEST;
+	return json_encode($error);
+}
+*/
+
+
 
 #ini_set('display_errors', 1);
 #ini_set('display_startup_errors', 1);
 #error_reporting(E_ALL);
 
-// descomente las líneas a continuación para la autenticación basada en token + sesión (consulte "login_token.html" + "login_token.php"):
 /*
-$auth = new PHP_API_AUTH(array(
-	'secret'=>'someVeryLongPassPhraseChangeMe',
-));
-if ($auth->executeCommand()) exit(0);
-if (empty($_SESSION['user']) || !$auth->hasValidCsrfToken()) {
-	header('HTTP/1.0 401 Unauthorized');
-	exit(0);
-}
+https://beta.monteverdeltda.com/auth.php?audience=index.php&response_type=token&client_id=default&redirect_uri=https://beta.monteverdeltda.com/
 */
-
-// descomente las líneas a continuación para la autenticación basada en formulario y sesión (consulte "login.html"):
-$auth = new PHP_API_AUTH(array(
-	'authenticator'=>function($user,$pass){ $_SESSION['user']=($user=='admin' && $pass=='admin'); }
-));
-if ($auth->executeCommand()) exit(0);
-if (empty($_SESSION['user']) || !$auth->hasValidCsrfToken()) {
-	header('HTTP/1.0 401 Unauthorized');
-	exit(showError(401));
-}
-
 
 $config = new Config([
 	'driver' => 'mysql',
@@ -7595,54 +7683,92 @@ $config = new Config([
 	
 	'openApiBase' => '{"info":{"title":"API-REST-MVLTDA","version":"2.0.0"}}',
 	'cacheType' => 'NoCache',
-	'controllers' => 'records,columns,cache,openapi,geojson',
-	'middlewares' => 'cors,ipAddress,pageLimits', // Default
-	// 'controllers' => 'records,geojson,openapi', // Default
-	// 'middlewares' => 'cors,validation,sanitation,multiTenancy,,joinLimits,customization',
+	'controllers' => 'records,columns,openapi,geojson', // cache
+	'middlewares' => 'cors,jwtAuth,dbAuth,authorization,ipAddress,pageLimits,sanitation,validation,multiTenancy,customization', // Disabled: basicAuth,joinLimits
 	
+	'dbAuth.mode' => 'required',
+	'dbAuth.usersTable' => 'users',
+	'dbAuth.usernameColumn' => 'username',
+	'dbAuth.passwordColumn' => 'password',
+	'dbAuth.returnedColumns' => '',
+	'authorization.tableHandler' => function ($operation, $tableName) {
+		$a = true;
+		switch($tableName){
+			case 'categories':
+				$a = true;
+				break;
+			case 'users':
+				if($operation == 'create' || $operation == 'update'){
+					# $a = false;
+				}
+				break;
+			case 'license_keys':
+				$a = false;
+				break;
+			case 'invisibles':
+				$a = (!isset($_SESSION['claims']['name']) && empty($_SESSION['username']));
+				break;
+		};
+		return $a;
+	},
+	'authorization.columnHandler' => function ($operation, $tableName, $columnName) {
+		$a = true;
+		switch($tableName){
+			// restringirá el acceso al campo 'contraseña' de la tabla 'usuarios' para todas las operaciones
+			case 'users':
+				$a = $columnName != 'password';
+				break;
+		}
+		return $a;
+	},
+	'authorization.recordHandler' => function ($operation, $tableName) {
+		$a = true;
+		switch($tableName){
+			case 'users':
+				// no permitirá el acceso a los registros de usuario donde el nombre de usuario es "admin".
+				// Esta construcción agrega un filtro a cada consulta ejecutada.
+				$a = ($tableName == 'users') ? 'filter=username,neq,admin' : '';
+				break;
+			case 'comments':
+				// no permitirá el acceso a los registros de la tabla comments donde el mensaje sea "invisible".
+				// Esta construcción agrega un filtro a cada consulta ejecutada.
+				$a = ($tableName == 'comments') ? 'filter=message,neq,invisible' : '';
+				break;
+		};
+		return $a;
+	},
+    'validation.handler' => function ($operation, $tableName, $column, $value, $context) {
+        return ($column['name'] == 'post_id' && !is_numeric($value)) ? 'must be numeric' : true;
+    },
+	'sanitation.handler' => function ($operation, $tableName, $column, $value) {
+        return is_string($value) ? strip_tags($value) : $value;
+    },
 	'ipAddress.tables' => 'barcodes',
 	'ipAddress.columns' => 'ip_address',
-	'pageLimits.pages' => 5,
-	'pageLimits.records' => 10,
+	// 'pageLimits.pages' => 5,
+	// 'pageLimits.records' => 1,
+    'multiTenancy.handler' => function ($operation, $tableName) {
+        return ($tableName == 'handicrafts') ? ['user_id' => 1] : [];
+    },
+	'customization.beforeHandler' => function ($operation, $tableName, $request, $environment) {
+        $environment->start = 0.003; /*microtime(true)*/
+    },
+    'customization.afterHandler' => function ($operation, $tableName, $response, $environment) {
+        if ($tableName == 'handicrafts' && $operation == 'increment') {
+            return $response->withHeader('X-Time-Taken', 0.006 - $environment->start); /*microtime(true)*/
+        }
+    },
+	
+	'jwtAuth.mode' => 'optional',
+    'jwtAuth.ttl' => '1538207605',
+    'jwtAuth.time' => '1538207605',
+    'jwtAuth.header' => 'X-Authorization',
+    'jwtAuth.leeway' => '1000',
+    'jwtAuth.secret' => 'Qgm7JByh8pdrtEsXjRoRk6BoBfa32pAG0dtuCtVs2y1MovieFODlrf4i1gKdOZ6vUH1DIPEso2ipQy4jt8IwZ4FMnCHPrP97QdF5a8ywa5AXlWuRzJWZ5ZkU7FJrc1ZZ',
+    'jwtAuth.algorithms' => '',
+    'jwtAuth.audiences' => '',
+    'jwtAuth.issuers' => '',
 ]);
-/*
-'controllers' => 'records,columns,cache,openapi,geojson',
-'middlewares' => 'cors,jwtAuth,basicAuth,authorization,validation,ipAddress,sanitation,multiTenancy,pageLimits,joinLimits,customization',
-'jwtAuth.mode' => 'optional',
-'jwtAuth.time' => '1538207605',
-'jwtAuth.secret' => 'axpIrCGNGqxzx2R9dtXLIPUSqPo778uhb8CA0F4Hx',
-'basicAuth.mode' => 'optional',
-'basicAuth.passwordFile' => __DIR__ . DIRECTORY_SEPARATOR . '.htpasswd',
-'authorization.tableHandler' => function ($operation, $tableName) {
-	return !($tableName == 'invisibles' && !isset($_SESSION['claims']['name']) && empty($_SESSION['username']));
-},
-'authorization.columnHandler' => function ($operation, $tableName, $columnName) {
-	return !($columnName == 'invisible');
-},
-'authorization.recordHandler' => function ($operation, $tableName) {
-	return ($tableName == 'comments') ? 'filter=message,neq,invisible' : '';
-},
-'ipAddress.tables' => 'barcodes',
-'sanitation.handler' => function ($operation, $tableName, $column, $value) {
-	return is_string($value) ? strip_tags($value) : $value;
-},
-'validation.handler' => function ($operation, $tableName, $column, $value, $context) {
-	return ($column['name'] == 'post_id' && !is_numeric($value)) ? 'must be numeric' : true;
-},
-'multiTenancy.handler' => function ($operation, $tableName) {
-	return ($tableName == 'kunsthåndværk') ? ['user_id' => 1] : [];
-},
-'joinLimits.depth' => 2,
-'joinLimits.tables' => 4,
-'joinLimits.records' => 10,
-'customization.beforeHandler' => function ($operation, $tableName, $request, $environment) {
-	$environment->start = 0.003;
-},
-'customization.afterHandler' => function ($operation, $tableName, $response, $environment) {
-	if ($tableName == 'kunsthåndværk' && $operation == 'increment') {
-		return $response->withHeader('X-Time-Taken', 0.006 - $environment->start);
-	}
-},*/
 
 $request = RequestFactory::fromGlobals();
 $api = new Api($config);
