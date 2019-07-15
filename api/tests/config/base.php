@@ -4,7 +4,7 @@ $settings = [
     'username' => 'php-crud-api',
     'password' => 'php-crud-api',
     'controllers' => 'records,columns,cache,openapi,geojson',
-    'middlewares' => 'cors,jwtAuth,basicAuth,authorization,validation,ipAddress,sanitation,multiTenancy,pageLimits,joinLimits,customization',
+    'middlewares' => 'firewall,cors,jwtAuth,basicAuth,authorization,validation,ipAddress,sanitation,multiTenancy,pageLimits,joinLimits,customization',
     'jwtAuth.mode' => 'optional',
     'jwtAuth.time' => '1538207605',
     'jwtAuth.secret' => 'axpIrCGNGqxzx2R9dtXLIPUSqPo778uhb8CA0F4Hx',
@@ -44,4 +44,7 @@ $settings = [
         }
     },
     'debug' => false,
+    'cors.allowedOrigins' => "*",
+    'cors.allowCredentials' => true,
+    'firewall.reverseProxy' => true,
 ];

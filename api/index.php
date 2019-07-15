@@ -7663,15 +7663,6 @@ function showError($num_e){
 */
 
 
-
-#ini_set('display_errors', 1);
-#ini_set('display_startup_errors', 1);
-#error_reporting(E_ALL);
-
-/*
-https://beta.monteverdeltda.com/auth.php?audience=index.php&response_type=token&client_id=default&redirect_uri=https://beta.monteverdeltda.com/
-*/
-
 $config = new Config([
 	'driver' => 'mysql',
 	'address' => 'localhost',
@@ -7680,11 +7671,10 @@ $config = new Config([
 	'password' => 'H2P4uIqMT5',
 	'database' => 'admin_b2b',
 	'debug' => true,
-	
 	'openApiBase' => '{"info":{"title":"API-REST-MVLTDA","version":"2.0.0"}}',
 	'cacheType' => 'NoCache',
-	'controllers' => 'records,columns,openapi,geojson', // cache
-	'middlewares' => 'cors,jwtAuth,dbAuth,authorization,ipAddress,pageLimits,sanitation,validation,multiTenancy,customization', // Disabled: basicAuth,joinLimits
+	'controllers' => 'records,columns,openapi,geojson,cache', // cache
+	'middlewares' => 'cors,dbAuth,xsrf,authorization,jwtAuth,sanitation,ipAddress,pageLimits,,validation,multiTenancy,customization', // Disabled: basicAuth,joinLimits
 	
 	'dbAuth.mode' => 'required',
 	'dbAuth.usersTable' => 'users',
@@ -7740,9 +7730,7 @@ $config = new Config([
     'validation.handler' => function ($operation, $tableName, $column, $value, $context) {
         return ($column['name'] == 'post_id' && !is_numeric($value)) ? 'must be numeric' : true;
     },
-	'sanitation.handler' => function ($operation, $tableName, $column, $value) {
-        return is_string($value) ? strip_tags($value) : $value;
-    },
+	
 	'ipAddress.tables' => 'barcodes',
 	'ipAddress.columns' => 'ip_address',
 	// 'pageLimits.pages' => 5,
@@ -7759,6 +7747,10 @@ $config = new Config([
         }
     },
 	
+	'sanitation.handler' => function ($operation, $tableName, $column, $value) {
+        return is_string($value) ? strip_tags($value) : $value;
+    },
+	
 	'jwtAuth.mode' => 'optional',
     'jwtAuth.ttl' => '1538207605',
     'jwtAuth.time' => '1538207605',
@@ -7768,6 +7760,11 @@ $config = new Config([
     'jwtAuth.algorithms' => '',
     'jwtAuth.audiences' => '',
     'jwtAuth.issuers' => '',
+    'xsrf.cookieName' => "X-XSRF-TOKEN",
+    'xsrf.headerName' => "X-XSRF-TOKEN",
+	
+    'cors.allowedOrigins' => "*",
+    'cors.allowCredentials' => true,
 ]);
 
 $request = RequestFactory::fromGlobals();
