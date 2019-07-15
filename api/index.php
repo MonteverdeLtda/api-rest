@@ -7674,7 +7674,7 @@ $config = new Config([
 	'openApiBase' => '{"info":{"title":"API-REST-MVLTDA","version":"2.0.0"}}',
 	'cacheType' => 'NoCache',
 	'controllers' => 'records,columns,openapi,geojson,cache', // cache
-	'middlewares' => 'cors,dbAuth,xsrf,authorization,jwtAuth,sanitation,ipAddress,pageLimits,,validation,multiTenancy,customization', // Disabled: basicAuth,joinLimits
+	'middlewares' => 'cors,dbAuth,xsrf,authorization,jwtAuth,sanitation,ipAddress,pageLimits,validation,multiTenancy,customization', // Disabled: basicAuth,joinLimits
 	
 	'dbAuth.mode' => 'required',
 	'dbAuth.usersTable' => 'users',
@@ -7763,8 +7763,8 @@ $config = new Config([
     'xsrf.cookieName' => "X-XSRF-TOKEN",
     'xsrf.headerName' => "X-XSRF-TOKEN",
 	
-    'cors.allowedOrigins' => "*",
-    'cors.allowCredentials' => true,
+    // 'cors.allowedOrigins' => "*",
+    // 'cors.allowCredentials' => true,
 ]);
 
 $request = RequestFactory::fromGlobals();

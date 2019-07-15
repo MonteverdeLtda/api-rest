@@ -11,16 +11,19 @@
  */
 
 (function (window) {
-	
-	
 	var _api = axios.create({
 		baseURL: 'https://api.monteverdeltda.com',
 		withCredentials: true,
 		timeout: 10000,
 		responseType: 'json',
 		responseEncoding: 'utf8',
+		headers: {},
 	});
 	_api.interceptors.response.use(function(response) {
+		console.log(document.cookie);
+		
+		console.log(response.headers['x-xsrf-token']);
+		
 		if (response.headers['x-xsrf-token']) {
 			document.cookie = 'XSRF-TOKEN=' + response.headers['x-xsrf-token'] + '; path=/';
 		};
@@ -243,31 +246,11 @@
 					  .catch(function (error) {
 					  })
 					  .finally(function () {
-						/* Servidor */
-						Mv.api.get('/records/users/' + localStorage._userid)
-						  .then(function (response) {
-							// console.log(response);
-							session_server = true;
-							if (session_server === true) {
-								Mv._userData.status = 'connected';
-								Mv._userData.userID = response.data.id;
-								Mv._userData.authResponse.userData = response.data;
-							} else {
-								Mv._userData.status = 'no_connected';
-								localStorage.clear();
-								Mv._userData.accessToken = 'none';
-								Mv._userData.userID = 0;
-							}
-						  })
-						  .catch(function (error) {
-						  })
-						  .finally(function () {
 							console.log(session_local);
 							console.log(session_server);
 							if(call != undefined && (typeof call) == 'function'){
 								call(Mv._userData);
 							}
-						  })
 					  });
 				} else {
 					console.log('SDK - El usuario no existe');
@@ -687,6 +670,7 @@
 			return params;
 		},
 		postLogIn: function(id_form, method, callback){
+			var self = this;
 			console.log("Iniciando post");
 			document.getElementById('FG-login-modal-messages').innerHTML = 'Iniciando Ingreso.';
 			var s = this;
@@ -705,14 +689,17 @@
 					console.log(a.config.headers['X-XSRF-TOKEN']);
 					console.log(a.data.id);
 					
-					
-					if(a.status == 200 && a.data.id != undefined && a.data.id > 0 && a.config.headers['X-XSRF-TOKEN'] != undefined){
-						document.getElementById('FG-login-modal-messages').innerHTML = 'Cargando sesion.';
-						Mv.saveSession(a);
-						Mv.Modal.eventFire('FG-login-modal-messages', 'click');
+					if(a.config.headers['X-XSRF-TOKEN'] == undefined){
+						console.log('Error obteniendo acceso.');
 					}else{
-						if(a.data.code != undefined && a.data.code == 1012){
-							document.getElementById('FG-login-modal-messages').innerHTML = 'Datos Invalidos.';
+						if(a.status == 200 && a.data.id != undefined && a.data.id > 0){
+							document.getElementById('FG-login-modal-messages').innerHTML = 'Cargando sesion.';
+							Mv.saveSession(a);
+							Mv.Modal.eventFire('FG-login-modal-messages', 'click');
+						}else{
+							if(a.data.code != undefined && a.data.code == 1012){
+								document.getElementById('FG-login-modal-messages').innerHTML = 'Datos Invalidos.';
+							}
 						}
 					}
 				})
@@ -725,7 +712,11 @@
 				.finally(function(){
 					console.log('finally login');
 					console.log(localStorage);
+					if(self.statusSession() == true){
 						document.getElementById('FG-login-modal-messages').innerHTML = 'sesion cargada.';
+					}else{
+						document.getElementById('FG-login-modal-messages').innerHTML = 'Hubo un problema cargando la session.';
+					}
 					return callback(Mv._userData);
 				});
 		},
