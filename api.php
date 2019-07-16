@@ -5013,7 +5013,8 @@ class CorsMiddleware extends Middleware
             }
             $allowCredentials = $this->getProperty('allowCredentials', 'true');
             if ($allowCredentials) {
-                $response = $response->withHeader('Access-Control-Allow-Credentials', $allowCredentials);
+               $response = $response->withHeader('Access-Control-Allow-Credentials', $allowCredentials);
+               // $response = $response->withHeader('Access-Control-Allow-Credentials', "*");
             }
             $maxAge = $this->getProperty('maxAge', '1728000');
             if ($maxAge) {
@@ -5032,6 +5033,7 @@ class CorsMiddleware extends Middleware
                 $response = $response->withHeader('Access-Control-Allow-Credentials', $allowCredentials);
             }
             $response = $response->withHeader('Access-Control-Allow-Origin', $origin);
+            // $response = $response->withHeader('Access-Control-Allow-Origin', "*");
         }
         return $response;
     }
@@ -7762,6 +7764,8 @@ $config = new Config([
     'jwtAuth.issuers' => '',
     'xsrf.cookieName' => "X-XSRF-TOKEN",
     'xsrf.headerName' => "X-XSRF-TOKEN",
+	/*
+	*/
 	
     // 'cors.allowedOrigins' => "*",
     // 'cors.allowCredentials' => true,
