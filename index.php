@@ -23,16 +23,19 @@
 // Esto se llama con los resultados de Mv.getLoginStatus().
 function statusChangeCallback(response) {
 	console.log('statusChangeCallback' + JSON.stringify(response));
+	console.log(JSON.stringify(response));
 	// El objeto de respuesta se devuelve con un campo de estado que permite a
 	// la aplicación conocer el estado actual de inicio de sesión de la persona.
 	// Los documentos completos sobre el objeto de respuesta se pueden encontrar en la documentación.
 	// para Mv.getLoginStatus().	
+	
+	console.log(response.status);
 	if (response.status === 'disconnect') {
 		document.getElementById('status').innerHTML = 'Porfavor inicie sesion para continuar.';
 	} else if (response.status === 'connected') {
 		// Inicia sesión en tu aplicación y en Monteverde.
 		testAPI();
-		console.log(response);
+		document.getElementById('status').innerHTML = 'Hola!.';
 	} else {
 		document.getElementById('status').innerHTML = 'La persona no ha iniciado sesión en su aplicación o no podemos decírselo.';
 	}
@@ -82,8 +85,9 @@ window.MonteverdeAPIInit = function() {
 // Consulte statusChangeCallback() para saber cuándo se realiza esta llamada.
 function testAPI() {
 	document.getElementById('status').innerHTML = 'Welcome!  Fetching your information.... ';
+	document.getElementById('userData').innerHTML = JSON.stringify(Mv.getUserInfo());
 	
-	Redoc.init('https://api.monteverdeltda.com/openapi', {
+	Redoc.init(Mv.configBase.baseURL + '/openapi', {
 	  scrollYOffset: 50
 	}, document.getElementById('docs'))
 }
