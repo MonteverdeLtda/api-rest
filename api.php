@@ -9,6 +9,9 @@
 
 namespace FelipheGomez\PhpCrudApi;
 
+define('cookieName', 'MV-XSRF-TOKEN');
+define('headerName', 'MV-X-XSRF-TOKEN');
+
 interface RequestFactoryInterface
 {
     public function createRequest(string $method, $uri): RequestInterface;
@@ -4946,6 +4949,7 @@ class BasicAuthMiddleware extends Middleware
     {
         if (session_status() == PHP_SESSION_NONE) {
             if (!headers_sent()) {
+				session_name(cookieName);
                 session_start();
             }
         }
@@ -5087,6 +5091,7 @@ class DbAuthMiddleware extends Middleware
     {
         if (session_status() == PHP_SESSION_NONE) {
             if (!headers_sent()) {
+				session_name(cookieName);
                 session_start();
             }
         }
@@ -5407,6 +5412,7 @@ class JwtAuthMiddleware extends Middleware
     {
         if (session_status() == PHP_SESSION_NONE) {
             if (!headers_sent()) {
+				session_name(cookieName);
                 session_start();
             }
         }
@@ -5670,7 +5676,9 @@ class XsrfMiddleware extends Middleware
         $cookieName = $this->getProperty('cookieName', 'XSRF-TOKEN');
         if (isset($_COOKIE[$cookieName])) {
             $token = $_COOKIE[$cookieName];
-        } else {
+        } else if (isset($_COOKIE[cookieName])) {
+			$token = $_COOKIE[cookieName];
+		} else {
             $secure = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on';
             $token = bin2hex(random_bytes(8));
             if (!headers_sent()) {
@@ -7762,8 +7770,9 @@ $config = new Config([
     'jwtAuth.algorithms' => '',
     'jwtAuth.audiences' => '',
     'jwtAuth.issuers' => '',
-    'xsrf.cookieName' => "api.monteverdeltda.com",
-    'xsrf.headerName' => "api.monteverdeltda.com",
+	/**/
+    'xsrf.cookieName' => cookieName,
+    'xsrf.headerName' => headerName,
 	/*
 	*/
 	
