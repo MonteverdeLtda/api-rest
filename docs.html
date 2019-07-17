@@ -62,11 +62,10 @@ window.MonteverdeAPIInit = function() {
 	Mv.init({
 		clientId   : '10000000001',
 		version     : '2.0.0',
-		domain: 'servicioalcliente.monteverdeltda.com',
-		baseURL: 'https://servicioalcliente.monteverdeltda.com',
+		domain: 'api.monteverdeltda.com',
+		baseURL: 'https://api.monteverdeltda.com',
 		cookie: {
-			name: 'PHPSESSID'
-			// name: 'X-XSRF-TOKEN'
+			name: 'api.monteverdeltda.com'
 		},
 	});
 	// Ahora que hemos inicializado el SDK de JavaScript, llamamos
@@ -93,7 +92,7 @@ function testAPI(authResponse) {
 		document.getElementById('status').innerHTML = 'Hola! ' + authResponse.userData.username + ', Esta es la documentacion de la API.';
 	document.getElementById('userData').innerHTML = JSON.stringify(Mv.getUserInfo());
 	
-	Redoc.init(Mv.initConfig().baseUrl + '/openapi', {
+	Redoc.init(Mv.initConfig().baseURL + '/openapi', {
 	  scrollYOffset: 50
 	}, document.getElementById('docs'))
 }

@@ -49,10 +49,10 @@ window.MonteverdeAPIInit = function() {
 	Mv.init({
 		clientId   : '10000000001',
 		version     : '2.0.0',
-		domain: 'servicioalcliente.monteverdeltda.com',
-		baseURL: 'https://servicioalcliente.monteverdeltda.com',
+		domain: 'api.monteverdeltda.com',
+		baseURL: 'https://api.monteverdeltda.com',
 		cookie: {
-			name: 'PHPSESSID'
+			name: 'api.monteverdeltda.com'
 		},
 	});
 

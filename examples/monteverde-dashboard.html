@@ -52,7 +52,12 @@ function checkLoginState() {
 window.MonteverdeAPIInit = function() {
 	Mv.init({
 		clientId   : '10000000001',
-		version     : '2.0.0'
+		version     : '2.0.0',
+		domain: 'api.monteverdeltda.com',
+		baseURL: 'https://api.monteverdeltda.com',
+		cookie: {
+			name: 'api.monteverdeltda.com'
+		},
 	});
 	// Ahora que hemos inicializado el SDK de JavaScript, llamamos
 	// Mv.getLoginStatus(). Esta función obtiene el estado del
