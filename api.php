@@ -7762,8 +7762,8 @@ $config = new Config([
     'jwtAuth.algorithms' => '',
     'jwtAuth.audiences' => '',
     'jwtAuth.issuers' => '',
-    'xsrf.cookieName' => "PHPSESSID",
-    'xsrf.headerName' => "PHPSESSID",
+    'xsrf.cookieName' => "api.monteverdeltda.com",
+    'xsrf.headerName' => "api.monteverdeltda.com",
 	/*
 	*/
 	
