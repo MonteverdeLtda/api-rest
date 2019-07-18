@@ -7654,25 +7654,6 @@ class ResponseUtils
     }
 }
 
-/*
-global $display_error;
-$display_error = array();
-// Error 401: No autorizado
-$display_error[401] = new stdclass();
-$display_error[401]->code = 401;
-$display_error[401]->error = "Unauthorized";
-$display_error[401]->message = "No tienes acceso a esta página, Si el problema persiste, ponte en contacto con el propietario del sitio web.";
-
-function showError($num_e){
-	global $display_error;
-	$error = $display_error[$num_e];
-	$error->server = $_SERVER;
-	$error->reuqest = $_REQUEST;
-	return json_encode($error);
-}
-*/
-
-
 $config = new Config([
 	'driver' => 'mysql',
 	'address' => 'localhost',
@@ -7682,10 +7663,8 @@ $config = new Config([
 	'database' => 'admin_b2b',
 	'debug' => true,
 	'openApiBase' => '{"info":{"title":"API-REST-MVLTDA","version":"2.0.0"}}',
-	'cacheType' => 'NoCache',
-	'controllers' => 'records,columns,openapi,geojson,cache', // cache
-	'middlewares' => 'cors,dbAuth,xsrf,authorization,jwtAuth,sanitation,ipAddress,pageLimits,validation,multiTenancy,customization', // Disabled: basicAuth,joinLimits
-	
+	'controllers' => 'records,columns,openapi,geojson,cache',
+	'middlewares' => 'cors,dbAuth,xsrf,authorization,jwtAuth,sanitation,ipAddress,pageLimits,validation,multiTenancy,customization',
 	'dbAuth.mode' => 'required',
 	'dbAuth.usersTable' => 'users',
 	'dbAuth.usernameColumn' => 'username',
@@ -7740,11 +7719,8 @@ $config = new Config([
     'validation.handler' => function ($operation, $tableName, $column, $value, $context) {
         return ($column['name'] == 'post_id' && !is_numeric($value)) ? 'must be numeric' : true;
     },
-	
 	'ipAddress.tables' => 'barcodes',
 	'ipAddress.columns' => 'ip_address',
-	// 'pageLimits.pages' => 5,
-	// 'pageLimits.records' => 1,
     'multiTenancy.handler' => function ($operation, $tableName) {
         return ($tableName == 'handicrafts') ? ['user_id' => 1] : [];
     },
@@ -7760,7 +7736,6 @@ $config = new Config([
 	'sanitation.handler' => function ($operation, $tableName, $column, $value) {
         return is_string($value) ? strip_tags($value) : $value;
     },
-	
 	'jwtAuth.mode' => 'optional',
     'jwtAuth.ttl' => '1538207605',
     'jwtAuth.time' => '1538207605',
@@ -7770,14 +7745,13 @@ $config = new Config([
     'jwtAuth.algorithms' => '',
     'jwtAuth.audiences' => '',
     'jwtAuth.issuers' => '',
-	/**/
     'xsrf.cookieName' => cookieName,
     'xsrf.headerName' => headerName,
-	/*
-	*/
-	
     // 'cors.allowedOrigins' => "*",
     // 'cors.allowCredentials' => true,
+	// 'pageLimits.pages' => 5,
+	// 'pageLimits.records' => 1,
+	// 'cacheType' => 'NoCache',
 ]);
 
 $request = RequestFactory::fromGlobals();
