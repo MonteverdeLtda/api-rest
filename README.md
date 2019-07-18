@@ -5,6 +5,8 @@ Script PHP 7 de un solo archivo que agrega una API REST a una base de datos Inno
 
 NOTA: Esta es la implementación de referencia de [TreeQL](https://treeql.org) en PHP.
 
+#### URL: [Url Principal](http://api.monteverdeltda.com), Las configuraciones de la API puede variar a las encontradas en este documento. Solicite previamente sus parametros de configuracion.
+
 ## Requerimientos
 
   - PHP 7.0 o superior con controladores PDO para MySQL, PgSQL o SqlSrv habilitados
